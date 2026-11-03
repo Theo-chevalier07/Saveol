@@ -8,4 +8,5 @@ else {
 
 switch($uc) {
     case 'auth': { include "controleurs/c_auth.php"; break;}
+    case 'deco': { include "controleurs/c_deconnexion.php"; break;}
 }
