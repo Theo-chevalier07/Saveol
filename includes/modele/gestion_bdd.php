@@ -1,25 +1,34 @@
 <?php
+if (!defined('SAVEOL')) { http_response_code(403); exit; }
 
 function verifier_identification($email, $mdp) {
-    require "connexion.php";
-    $sql = "select id_utilisateur, role from utilisateur where email = ? and mot_de_passe = ?";
+    global $bdd;
+    if (!is_string($email) || !is_string($mdp) || $mdp === ''
+        || !filter_var($email, FILTER_VALIDATE_EMAIL)) { return false; }
+    if (!isset($bdd)) { require __DIR__ . '/connexion.php'; }
+    $sql = 'SELECT id_utilisateur, nom, prenom, role, mot_de_passe FROM utilisateur WHERE email = ?';
     $exec = $bdd->prepare($sql);
-    $data =[$email, hash('sha256', $mdp)];
-    $trouver = false;
-    $exec->execute($data);
-    $ligne = $exec->fetch();
-    if($exec->rowCount() > 0) {
-        $trouver = true;
-        $_SESSION['id'] = $ligne['id_utilisateur'];
-        $_SESSION['role'] = $ligne['role'];
-    }
-    return $trouver;
+    $exec->execute([$email]);
+    $ligne = $exec->fetch(PDO::FETCH_ASSOC);
+    if (!$ligne || !in_array($ligne['role'], ['client', 'gestionnaire', 'admin'], true)
+        || !hash_equals($ligne['mot_de_passe'], hash('sha256', $mdp))) { return false; }
+
+    // Renouveler l'identifiant évite de conserver une session fixée avant connexion.
+    session_regenerate_id(true);
+    $_SESSION = [
+        'id' => (int) $ligne['id_utilisateur'],
+        'role' => $ligne['role'],
+        'nom' => $ligne['nom'],
+        'prenom' => $ligne['prenom']
+    ];
+    return true;
 }
 
-function produitsEnAvant(){
-    require "connexion.php";
-    $sql = "select nom, description, prix, image from produit where mis_en_avant = 1";
+function produitsEnAvant() {
+    global $bdd;
+    if (!isset($bdd)) { require __DIR__ . '/connexion.php'; }
+    $sql = 'SELECT nom, description, prix, image FROM produit WHERE mis_en_avant = 1';
     $exec = $bdd->prepare($sql);
     $exec->execute();
-    return $exec->fetchAll();
+    return $exec->fetchAll(PDO::FETCH_ASSOC);
 }
