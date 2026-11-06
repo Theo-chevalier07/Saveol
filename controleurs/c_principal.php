@@ -22,6 +22,7 @@ switch ($uc) {
     case 'panier': require __DIR__ . '/c_panier.php'; break;
     case 'compte': require __DIR__ . '/c_compte.php'; break;
     case 'gestion_commandes': require __DIR__ . '/c_gestion_commandes.php'; break;
+    case 'gestion_catalogue': require __DIR__ . '/c_gestion_catalogue.php'; break;
     default:
         // Ces pages seront remplacées lors des prochains lots du binôme.
         $titres = [
