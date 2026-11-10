@@ -253,6 +253,13 @@ function changerMiseEnAvant($id) {
     $exec->execute([$id]);
 }
 
+function changerDisponibilite($id) {
+    require "connexion.php";
+    $sql = "update produit set disponible = 1 - disponible where id_produit = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$id]);
+}
+
 /* ===== CATEGORIES ===== */
 
 function getCategories() {

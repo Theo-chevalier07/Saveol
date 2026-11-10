@@ -30,7 +30,9 @@ if (!defined('SAVEOL')) {
                         <p class="text-muted small">Ce produit est vendu en gros volume, contactez Savéol pour obtenir un prix.</p>
                     <?php } ?>
 
-                    <?php if ($_SESSION['role'] == 'client' && $produit['prix'] != null) { ?>
+                    <?php if ($produit['disponible'] == 0) { ?>
+                        <span class="statut statut-refusee">Rupture de stock</span>
+                    <?php } elseif ($_SESSION['role'] == 'client' && $produit['prix'] != null) { ?>
                         <!-- Ajout au panier -->
                         <form method="post" action="index.php?uc=panier&action=ajouter" class="ajout-panier">
                             <input type="hidden" name="id_produit" value="<?php echo $produit['id_produit']; ?>">

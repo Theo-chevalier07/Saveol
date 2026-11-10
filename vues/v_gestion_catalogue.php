@@ -20,7 +20,7 @@
 <div class="table-responsive">
     <table class="table align-middle">
         <thead>
-            <tr><th></th><th>Nom</th><th>Catégorie</th><th>Prix</th><th>Conditionnement</th><th>En avant</th><th></th></tr>
+            <tr><th></th><th>Nom</th><th>Catégorie</th><th>Prix</th><th>Conditionnement</th><th>En avant</th><th>Stock</th><th></th></tr>
         </thead>
         <tbody>
             <?php foreach ($lesProduits as $produit) { ?>
@@ -39,6 +39,14 @@
                     <td>
                         <a href="index.php?uc=gestion_catalogue&action=mise_en_avant&id_produit=<?php echo $produit['id_produit']; ?>"
                            class="etoile <?php if ($produit['mis_en_avant'] == 1) { echo 'active'; } ?>" title="Mettre en avant">★</a>
+                    </td>
+                    <td>
+                        <!-- Un clic passe le produit en rupture ou le remet en stock -->
+                        <?php if ($produit['disponible'] == 1) { ?>
+                            <a href="index.php?uc=gestion_catalogue&action=disponibilite&id_produit=<?php echo $produit['id_produit']; ?>" class="statut statut-terminee text-decoration-none" title="Mettre en rupture">En stock</a>
+                        <?php } else { ?>
+                            <a href="index.php?uc=gestion_catalogue&action=disponibilite&id_produit=<?php echo $produit['id_produit']; ?>" class="statut statut-refusee text-decoration-none" title="Remettre en stock">Rupture</a>
+                        <?php } ?>
                     </td>
                     <td class="text-nowrap text-end">
                         <a class="btn btn-outline-secondary btn-sm" href="index.php?uc=gestion_catalogue&action=modifier&id_produit=<?php echo $produit['id_produit']; ?>">Modifier</a>

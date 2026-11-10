@@ -22,6 +22,9 @@ switch($action) {
         if ($produit == false) {
             $erreur = "Ce produit n'existe pas.";
         }
+        elseif ($produit['disponible'] == 0) {
+            $erreur = "Ce produit est en rupture de stock.";
+        }
         elseif ($produit['prix'] == null) {
             $erreur = "Ce produit est sur devis, contactez Savéol pour le commander.";
         }

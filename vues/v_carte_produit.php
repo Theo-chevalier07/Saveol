@@ -14,7 +14,9 @@
                 <span class="prix sur-devis">Sur devis</span>
             <?php } ?>
 
-            <?php if ($_SESSION['role'] == 'client' && $unProduit['prix'] != null) { ?>
+            <?php if ($unProduit['disponible'] == 0) { ?>
+                <span class="statut statut-refusee">Rupture de stock</span>
+            <?php } elseif ($_SESSION['role'] == 'client' && $unProduit['prix'] != null) { ?>
                 <!-- Ajout au panier -->
                 <form method="post" action="index.php?uc=panier&action=ajouter" class="ajout-panier">
                     <input type="hidden" name="id_produit" value="<?php echo $unProduit['id_produit']; ?>">

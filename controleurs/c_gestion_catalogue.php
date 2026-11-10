@@ -101,6 +101,12 @@ switch($action) {
         break;
     }
 
+    case "disponibilite": {
+        changerDisponibilite($_REQUEST['id_produit']);
+        $message = "La disponibilité du produit a été modifiée.";
+        break;
+    }
+
     case "supprimer": {
         // On demande une confirmation avant de supprimer
         $produit = getProduit($_REQUEST['id_produit']);
