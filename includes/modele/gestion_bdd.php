@@ -24,7 +24,7 @@ function verifier_identification($email, $mdp) {
 
 function produitsEnAvant(){
     require "connexion.php";
-    $sql = "select nom, description, prix, image from produit where mis_en_avant = 1";
+    $sql = "select p.*, c.libelle from produit p join categorie c on c.id_categorie = p.id_categorie where p.mis_en_avant = 1 order by p.nom";
     $exec = $bdd->prepare($sql);
     $exec->execute();
     return $exec->fetchAll();
@@ -34,7 +34,7 @@ function produitsEnAvant(){
 
 function getProduit($id) {
     require "connexion.php";
-    $sql = "select * from produit where id_produit = ?";
+    $sql = "select p.*, c.libelle from produit p join categorie c on c.id_categorie = p.id_categorie where p.id_produit = ?";
     $exec = $bdd->prepare($sql);
     $exec->execute([$id]);
     return $exec->fetch();
@@ -49,6 +49,28 @@ function getTousLesProduits() {
 }
 
 /* ===== PANIER ET COMMANDE ===== */
+
+function getLignesPanier($panier) {
+    // On retrouve chaque produit du panier avec sa quantité et son sous-total
+    $lesLignes = array();
+    foreach ($panier as $idProduit => $quantite) {
+        $produit = getProduit($idProduit);
+        if ($produit != false) {
+            $produit['quantite'] = $quantite;
+            $produit['sous_total'] = $produit['prix'] * $quantite;
+            $lesLignes[] = $produit;
+        }
+    }
+    return $lesLignes;
+}
+
+function getTotalPanier($lesLignes) {
+    $total = 0;
+    foreach ($lesLignes as $ligne) {
+        $total = $total + $ligne['sous_total'];
+    }
+    return $total;
+}
 
 function creerCommande($idUtilisateur, $panier) {
     require "connexion.php";

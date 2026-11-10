@@ -30,41 +30,20 @@
                         </div>
                         <form method="post" action="index.php?uc=panier&action=modifier" class="d-flex gap-2">
                             <input type="hidden" name="id_produit" value="<?php echo $ligne['id_produit']; ?>">
-                            <input type="number" name="quantite" min="0" value="<?php echo $ligne['quantite']; ?>" class="form-control form-control-sm champ-quantite">
+                            <input type="number" name="quantite" min="0" value="<?php echo $ligne['quantite']; ?>" class="form-control form-control-sm champ-quantite" onfocus="this.select()">
                             <button type="submit" class="btn btn-outline-secondary btn-sm">OK</button>
                         </form>
                         <div class="prix-ligne"><?php echo number_format($ligne['sous_total'], 2, ',', ' '); ?> €</div>
-                        <a class="btn btn-danger btn-sm" href="index.php?uc=panier&action=supprimer&id_produit=<?php echo $ligne['id_produit']; ?>">Retirer</a>
+                        <div class="d-flex gap-2">
+                            <a class="btn btn-outline-secondary btn-sm" href="index.php?uc=panier&action=retirer_un&id_produit=<?php echo $ligne['id_produit']; ?>">Retirer</a>
+                            <a class="btn btn-danger btn-sm" href="index.php?uc=panier&action=supprimer&id_produit=<?php echo $ligne['id_produit']; ?>">Tout retirer</a>
+                        </div>
                     </div>
                 <?php } ?>
             <?php } ?>
         </div>
 
-        <!-- En attendant la fiche produit du catalogue -->
-        <div class="card mt-4">
-            <div class="card-header">Ajouter un produit</div>
-            <div class="card-body">
-                <form method="post" action="index.php?uc=panier&action=ajouter" class="row g-2">
-                    <div class="col-md-7">
-                        <select name="id_produit" class="form-select">
-                            <?php foreach ($lesProduits as $produit) { ?>
-                                <?php if ($produit['prix'] != null) { ?>
-                                    <option value="<?php echo $produit['id_produit']; ?>">
-                                        <?php echo htmlspecialchars($produit['nom'] . ' - ' . $produit['conditionnement']); ?>
-                                    </option>
-                                <?php } ?>
-                            <?php } ?>
-                        </select>
-                    </div>
-                    <div class="col-4 col-md-2">
-                        <input type="number" name="quantite" min="1" value="1" class="form-control">
-                    </div>
-                    <div class="col-8 col-md-3">
-                        <button type="submit" class="btn btn-primary w-100">Ajouter</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <a href="index.php?uc=catalogue" class="retour d-inline-block mt-3">&lsaquo; Continuer mes achats</a>
     </div>
 
     <!-- Total et validation -->

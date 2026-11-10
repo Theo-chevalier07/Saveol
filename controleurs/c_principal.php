@@ -38,6 +38,15 @@ if (isset($_SESSION['role'])) {
     }
 }
 
+// Petit panier affiché dans le menu des clients
+if (isset($_SESSION['role']) && $_SESSION['role'] == 'client') {
+    if (!isset($_SESSION['panier'])) {
+        $_SESSION['panier'] = array();
+    }
+    $miniPanier = getLignesPanier($_SESSION['panier']);
+    $totalMiniPanier = getTotalPanier($miniPanier);
+}
+
 // Routage des actions
 switch($uc) {
     case 'auth': { include "controleurs/c_auth.php"; break;}
