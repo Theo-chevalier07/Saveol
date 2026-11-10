@@ -129,7 +129,7 @@ function getCommande($idCommande) {
 
 function getLignesCommande($idCommande) {
     require "connexion.php";
-    $sql = "select p.nom, p.conditionnement, l.quantite, l.prix_unitaire, l.quantite * l.prix_unitaire as sous_total
+    $sql = "select p.nom, p.image, p.conditionnement, l.quantite, l.prix_unitaire, l.quantite * l.prix_unitaire as sous_total
             from ligne_commande l join produit p on p.id_produit = l.id_produit
             where l.id_commande = ?";
     $exec = $bdd->prepare($sql);
