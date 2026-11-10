@@ -1,56 +1,102 @@
 <?php
-if (!defined('SAVEOL')) { http_response_code(403); exit; }
-require 'includes/modele/panier.php';
-$action = $_GET['action'] ?? 'afficher';
-if (!is_string($action) || !in_array($action, ['afficher', 'ajouter', 'modifier', 'supprimer', 'valider'], true)) {
-    http_response_code(404);
-    exit('Action introuvable.');
+if (!isset($_REQUEST['action'])){
+    $action = 'afficher';
 }
-if ($action !== 'afficher') {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        header('Allow: POST'); http_response_code(405);
-        exit('Utilisez les boutons du panier.');
-    }
-    if (!jeton_csrf_valide($_POST['csrf'] ?? null)) {
-        http_response_code(403);
-        exit('Le formulaire a expiré. Revenez au panier et réessayez.');
-    }
-    try {
-        switch ($action) {
-            case 'ajouter':
-                ajouter_au_panier($_POST['id_produit'] ?? null, $_POST['quantite'] ?? null);
-                $_SESSION['panier_message'] = 'Le produit a été ajouté au panier.';
-                break;
-            case 'modifier':
-                modifier_quantite_panier($_POST['id_produit'] ?? null, $_POST['quantite'] ?? null);
-                $_SESSION['panier_message'] = 'La quantité a été modifiée.';
-                break;
-            case 'supprimer':
-                supprimer_du_panier($_POST['id_produit'] ?? null);
-                $_SESSION['panier_message'] = 'Le produit a été retiré du panier.';
-                break;
-            case 'valider':
-                $idCommande = valider_commande();
-                $_SESSION['panier_message'] = 'Votre commande n°' . $idCommande . ' a été enregistrée avec le statut « En attente ».';
-                break;
+else {
+    $action = $_REQUEST['action'];
+}
+
+// Le panier est gardé dans la session : id_produit => quantité
+if (!isset($_SESSION['panier'])) {
+    $_SESSION['panier'] = array();
+}
+
+$message = '';
+$erreur = '';
+
+switch($action) {
+    case "ajouter": {
+        $idProduit = $_REQUEST['id_produit'];
+        $quantite = $_REQUEST['quantite'];
+        $produit = getProduit($idProduit);
+        if ($produit == false) {
+            $erreur = "Ce produit n'existe pas.";
         }
-    } catch (PDOException $e) {
-        $_SESSION['panier_erreur'] = 'La commande n’a pas pu être enregistrée. Votre panier est conservé. Réessayez plus tard.';
-    } catch (DomainException $e) {
-        $_SESSION['panier_erreur'] = $e->getMessage();
+        elseif ($produit['prix'] == null) {
+            $erreur = "Ce produit est sur devis, contactez Savéol pour le commander.";
+        }
+        elseif (!ctype_digit($quantite) || $quantite < 1) {
+            $erreur = "La quantité doit être un nombre entier supérieur à 0.";
+        }
+        else {
+            // Si le produit est déjà dans le panier, on ajoute la quantité
+            if (isset($_SESSION['panier'][$idProduit])) {
+                $_SESSION['panier'][$idProduit] = $_SESSION['panier'][$idProduit] + $quantite;
+            }
+            else {
+                $_SESSION['panier'][$idProduit] = (int) $quantite;
+            }
+            $message = "Le produit a été ajouté au panier.";
+        }
+        break;
     }
-    // Recharger la page ne renvoie pas le formulaire et ne crée pas de doublon.
-    header('Location: index.php?uc=panier', true, 303);
-    exit;
+
+    case "modifier": {
+        $idProduit = $_REQUEST['id_produit'];
+        $quantite = $_REQUEST['quantite'];
+        if (!ctype_digit($quantite)) {
+            $erreur = "La quantité doit être un nombre entier.";
+        }
+        elseif ($quantite == 0) {
+            unset($_SESSION['panier'][$idProduit]);
+            $message = "Le produit a été retiré du panier.";
+        }
+        else {
+            $_SESSION['panier'][$idProduit] = (int) $quantite;
+            $message = "La quantité a été modifiée.";
+        }
+        break;
+    }
+
+    case "supprimer": {
+        unset($_SESSION['panier'][$_REQUEST['id_produit']]);
+        $message = "Le produit a été retiré du panier.";
+        break;
+    }
+
+    case "valider": {
+        if (count($_SESSION['panier']) == 0) {
+            $erreur = "Votre panier est vide.";
+        }
+        else {
+            $idCommande = creerCommande($_SESSION['id'], $_SESSION['panier']);
+            if ($idCommande == 0) {
+                $erreur = "La commande n'a pas pu être enregistrée, réessayez.";
+            }
+            else {
+                $_SESSION['panier'] = array();
+                $message = "Votre commande n°" . $idCommande . " a bien été enregistrée avec le statut « En attente ».";
+            }
+        }
+        break;
+    }
 }
-$message = $_SESSION['panier_message'] ?? '';
-$erreur = $_SESSION['panier_erreur'] ?? '';
-unset($_SESSION['panier_message'], $_SESSION['panier_erreur']);
-try {
-    $recap = recapitulatif_panier();
-    $produits = produits_a_ajouter();
-} catch (PDOException $e) {
-    http_response_code(503);
-    exit('Le panier est momentanément indisponible. Vos articles sont conservés.');
+
+// On prépare les lignes du panier pour la vue
+$lesLignes = array();
+$total = 0;
+foreach ($_SESSION['panier'] as $idProduit => $quantite) {
+    $produit = getProduit($idProduit);
+    if ($produit != false) {
+        $produit['quantite'] = $quantite;
+        $produit['sous_total'] = $produit['prix'] * $quantite;
+        $total = $total + $produit['sous_total'];
+        $lesLignes[] = $produit;
+    }
 }
-require 'vues/v_panier.php';
+
+// En attendant la fiche produit, on peut ajouter un produit depuis le panier
+$lesProduits = getTousLesProduits();
+
+require "vues/v_panier.php";
+?>

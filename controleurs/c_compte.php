@@ -1,50 +1,55 @@
 <?php
-if (!defined('SAVEOL')) { http_response_code(403); exit; }
-require 'includes/modele/compte.php';
-$action = $_GET['action'] ?? 'afficher';
-if (!is_string($action) || !in_array($action, ['afficher', 'modifier', 'detail'], true)) {
-    http_response_code(404); exit('Action introuvable.');
+if (!isset($_REQUEST['action'])){
+    $action = 'afficher';
 }
-if ($action === 'modifier') {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        header('Allow: POST'); http_response_code(405); exit('Utilisez le formulaire de votre compte.');
-    }
-    if (!jeton_csrf_valide($_POST['csrf'] ?? null)) {
-        http_response_code(403); exit('Le formulaire a expiré. Revenez à votre compte et réessayez.');
-    }
+else {
+    $action = $_REQUEST['action'];
 }
+
+$message = '';
 $erreur = '';
-$message = $_SESSION['compte_message'] ?? '';
-unset($_SESSION['compte_message']);
-try {
-    $compte = consulter_compte();
-    if ($action === 'detail') {
-        $detail = detail_commande_client($_GET['id_commande'] ?? null);
-        if (!$detail) { http_response_code(404); exit('Commande introuvable.'); }
-        require 'vues/v_detail_commande.php';
-        return;
-    }
-    if ($action === 'modifier') {
-        try {
-            modifier_compte($_POST);
-            $_SESSION['compte_message'] = 'Vos informations ont été enregistrées.';
-            header('Location: index.php?uc=compte', true, 303);
-            exit;
-        } catch (DomainException $e) {
-            http_response_code(422);
-            $erreur = $e->getMessage();
-            // Conserver la saisie pour permettre au client de la corriger.
-            foreach (['nom', 'prenom', 'email', 'telephone', 'adresse'] as $champ) {
-                $compte[$champ] = is_string($_POST[$champ] ?? null) ? $_POST[$champ] : '';
-            }
+
+switch($action) {
+    case "modifier": {
+        $nom = trim($_REQUEST['nom']);
+        $prenom = trim($_REQUEST['prenom']);
+        $email = trim($_REQUEST['email']);
+        $telephone = trim($_REQUEST['telephone']);
+        $adresse = trim($_REQUEST['adresse']);
+
+        // On vérifie les champs avant d'enregistrer
+        if ($nom == '' || $prenom == '' || $email == '' || $telephone == '' || $adresse == '') {
+            $erreur = "Tous les champs sont obligatoires.";
         }
+        elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $erreur = "L'adresse email n'est pas valide.";
+        }
+        elseif (emailDejaUtilise($email, $_SESSION['id'])) {
+            $erreur = "Cette adresse email est déjà utilisée.";
+        }
+        else {
+            modifierUtilisateur($_SESSION['id'], $nom, $prenom, $email, $telephone, $adresse);
+            $_SESSION['nom'] = $nom;
+            $_SESSION['prenom'] = $prenom;
+            $message = "Vos informations ont bien été modifiées.";
+        }
+        break;
     }
-    $commandes = historique_commandes();
-    require 'vues/v_compte.php';
-} catch (PDOException $e) {
-    http_response_code(503);
-    echo 'Votre compte est momentanément indisponible. Réessayez plus tard.';
-} catch (DomainException $e) {
-    http_response_code(403);
-    echo htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+
+    case "detail": {
+        $commande = getCommande($_REQUEST['id_commande']);
+        // On vérifie que la commande appartient bien au client connecté
+        if ($commande == false || $commande['id_utilisateur'] != $_SESSION['id']) {
+            header("Location: index.php?uc=compte");
+            exit;
+        }
+        $lesLignes = getLignesCommande($commande['id_commande']);
+        require "vues/v_detail_commande.php";
+        exit;
+    }
 }
+
+$utilisateur = getUtilisateur($_SESSION['id']);
+$lesCommandes = getCommandesClient($_SESSION['id']);
+require "vues/v_compte.php";
+?>
