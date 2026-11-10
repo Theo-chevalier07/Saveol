@@ -23,8 +23,8 @@ switch ($action) {
     case 'par_categorie': {
         $idCategorie = $_REQUEST['id_categorie'];
         $lesProduits = getProduitsParCategorie($idCategorie);
-        // Optionnel : récupérer le nom de la catégorie courante pour l'affichage
-        $titreCatalogue = "Produits de la catégorie";
+        $laCategorie = getCategorie($idCategorie);
+        $titreCatalogue = $laCategorie['libelle'];
         break;
     }
 

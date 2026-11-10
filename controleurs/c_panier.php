@@ -36,7 +36,7 @@ switch($action) {
             else {
                 $_SESSION['panier'][$idProduit] = (int) $quantite;
             }
-            $message = "Le produit a été ajouté au panier.";
+            $message = "« " . $produit['nom'] . " » a été ajouté au panier.";
         }
         break;
     }
@@ -54,6 +54,19 @@ switch($action) {
         else {
             $_SESSION['panier'][$idProduit] = (int) $quantite;
             $message = "La quantité a été modifiée.";
+        }
+        break;
+    }
+
+    case "retirer_un": {
+        // On enlève un seul produit, et la ligne disparaît s'il n'en reste plus
+        $idProduit = $_REQUEST['id_produit'];
+        if (isset($_SESSION['panier'][$idProduit])) {
+            $_SESSION['panier'][$idProduit] = $_SESSION['panier'][$idProduit] - 1;
+            if ($_SESSION['panier'][$idProduit] <= 0) {
+                unset($_SESSION['panier'][$idProduit]);
+            }
+            $message = "Une quantité a été retirée.";
         }
         break;
     }
@@ -82,21 +95,31 @@ switch($action) {
     }
 }
 
-// On prépare les lignes du panier pour la vue
-$lesLignes = array();
-$total = 0;
-foreach ($_SESSION['panier'] as $idProduit => $quantite) {
-    $produit = getProduit($idProduit);
-    if ($produit != false) {
-        $produit['quantite'] = $quantite;
-        $produit['sous_total'] = $produit['prix'] * $quantite;
-        $total = $total + $produit['sous_total'];
-        $lesLignes[] = $produit;
+// Action faite depuis une autre page ou depuis le petit panier : on reste sur la même page
+if ($action != 'valider' && isset($_REQUEST['retour']) && substr($_REQUEST['retour'], 0, 13) == 'index.php?uc=') {
+    if ($erreur != '') {
+        $_SESSION['message_ajout'] = $erreur;
+        $_SESSION['message_ajout_type'] = 'danger';
     }
+    else {
+        $_SESSION['message_ajout'] = $message;
+        $_SESSION['message_ajout_type'] = 'success';
+    }
+    // Si l'action vient du petit panier, on le rouvre sur la page suivante
+    if (isset($_REQUEST['depuis_panier'])) {
+        $_SESSION['ouvrir_panier'] = true;
+    }
+    header("Location: " . $_REQUEST['retour']);
+    exit;
 }
 
-// En attendant la fiche produit, on peut ajouter un produit depuis le panier
-$lesProduits = getTousLesProduits();
+// On prépare les lignes du panier pour la vue
+$lesLignes = getLignesPanier($_SESSION['panier']);
+$total = getTotalPanier($lesLignes);
+
+// Le petit panier du menu doit aussi être à jour
+$miniPanier = $lesLignes;
+$totalMiniPanier = $total;
 
 require "vues/v_panier.php";
 ?>
