@@ -21,5 +21,9 @@ require 'includes/header.php';
         </div>
         <button class="btn btn-primary w-100" type="submit">Se connecter</button>
     </form>
+<div class="text-center mt-3">
+    <p>Vous n'avez pas encore de compte ?</p>
+    <a href="index.php?uc=inscription" class="btn btn-secondary">Créer un compte</a>
+</div>
 </section>
 <?php require 'includes/footer.php'; ?>

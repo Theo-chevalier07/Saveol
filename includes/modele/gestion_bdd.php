@@ -33,11 +33,3 @@ function produitsEnAvant() {
     return $exec->fetchAll(PDO::FETCH_ASSOC);
 }
 
-
-function creer_utilisateur($nom, $prenom, $email, $mot_de_passe) {
-    require "connexion.php";
-    $sql = "insert into utilisateur (nom, prenom, email, mot_de_passe, role, date_creation) values (?, ?, ?, ?, 'utilisateur', now())";
-    $exec = $bdd->prepare($sql);
-    $data = [$nom, $prenom, $email, hash('sha256', $mot_de_passe)];
-    $exec->execute($data);
-}

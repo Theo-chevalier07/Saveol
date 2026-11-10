@@ -8,6 +8,10 @@ if ($uc === 'auth') {
     require __DIR__ . '/c_auth.php';
     return;
 }
+if ($uc === 'inscription') {
+    require __DIR__ . '/c_inscription.php';
+    return;
+}
 if (!utilisateur_connecte()) {
     header('Location: index.php?uc=auth');
     exit;

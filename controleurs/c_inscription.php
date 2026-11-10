@@ -1,39 +1,56 @@
 <?php
-if (!isset($_REQUEST['action'])){
-    $action = 'afficher';
-}
-else {
-    $action = $_REQUEST['action'];
+if (!defined('SAVEOL')) { http_response_code(403); exit; }
+
+// Inclusion du nouveau fichier de modèle dédié à l'inscription
+require 'includes/modele/gestion_inscription.php';
+
+$action = $_REQUEST['action'] ?? 'demandeInscription';
+if (!in_array($action, ['demandeInscription', 'validerInscription'], true)) {
+    http_response_code(404); exit('Action introuvable.');
 }
 
-switch($action) {
-    case "afficher": {
-        require "vues/v_inscription.php";
-        break;
+if ($action === 'validerInscription' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Allow: POST'); 
+    http_response_code(405); 
+    exit;
+}
+
+try {
+    // Connexion à la base de données (fournit $bdd)
+    require 'includes/modele/connexion.php';
+
+    $msgErreur = '';
+
+    if ($action === 'validerInscription') {
+        $nom       = trim($_POST['nom'] ?? '');
+        $prenom    = trim($_POST['prenom'] ?? '');
+        $email     = trim($_POST['email'] ?? '');
+        $mdp       = $_POST['mdp'] ?? '';
+        $adresse   = trim($_POST['adresse'] ?? '');
+        $telephone = trim($_POST['telephone'] ?? '');
+
+        // Vérification que tous les champs requis sont remplis
+        if (empty($nom) || empty($prenom) || empty($email) || empty($mdp) || empty($adresse) || empty($telephone)) {
+            $msgErreur = "Veuillez remplir tous les champs du formulaire.";
+        } else {
+            // Appel de la fonction ajouterUtilisateur définie dans gestion_inscription.php
+            $resultat = ajouterUtilisateur($bdd, $nom, $prenom, $email, $mdp, $adresse, $telephone);
+
+            if ($resultat) {
+                header("Location: index.php?uc=connexion&msg=succesInscription", true, 303);
+                exit();
+            } else {
+                $msgErreur = "Une erreur est survenue lors de l'inscription (cet email est peut-être déjà utilisé).";
+            }
+        }
     }
 
-    case "inscription": {
-        $nom = $_REQUEST['nom'];
-        $prenom = $_REQUEST['prenom'];
-        $email = $_REQUEST['email'];
-        $mot_de_passe = $_REQUEST['mot_de_passe'];
-        $confirmation_mot_de_passe = $_REQUEST['confirmation_mot_de_passe'];
+    // Affichage de la vue
+    include("includes/header.php");
+    include("vues/v_inscription.php");
+    include("includes/footer.php");
 
-        if ($mot_de_passe !== $confirmation_mot_de_passe) {
-            $message = "Les mots de passe ne correspondent pas.";
-            require "vues/v_inscription.php";
-            break;
-        }
-
-        $utilisateur_existant = verifier_utilisateur_existant($email);
-        if ($utilisateur_existant) {
-            $message = "Un utilisateur avec cet email existe déjà.";
-            require "vues/v_inscription.php";
-            break;
-        }
-
-        creer_utilisateur($nom, $prenom, $email, $mot_de_passe);
-        require "vues/v_authentification.php";
-        break;
-    }
+} catch (PDOException $e) {
+    http_response_code(503); 
+    echo 'Le service d\'inscription est momentanément indisponible.';
 }
