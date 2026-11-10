@@ -35,6 +35,7 @@ CREATE TABLE produit (
     conditionnement VARCHAR(50) NOT NULL,
     image VARCHAR(255),
     mis_en_avant BOOLEAN NOT NULL DEFAULT 0,
+    disponible BOOLEAN NOT NULL DEFAULT 1,
     id_categorie INT NOT NULL,
     PRIMARY KEY (id_produit),
     FOREIGN KEY (id_categorie) REFERENCES categorie(id_categorie)
