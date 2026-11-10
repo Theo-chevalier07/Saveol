@@ -1,0 +1,24 @@
+/* === COULEURS COMMUNES === */
+:root {
+    --couleur-principale: #245c37;
+    --couleur-fond: #f4f7f2;
+    --couleur-texte: #24352a;
+}
+body { margin: 0; background: var(--couleur-fond); color: var(--couleur-texte); }
+/* === NAVIGATION === */
+.site-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding: 1rem 5%; background: var(--couleur-principale); }
+.site-header a { color: #fff; text-decoration: none; }
+.navbar-brand { font-size: 1.6rem; font-weight: bold; }
+.nav-links { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; }
+.nav-links form { margin: 0; }
+.site-header a:hover { text-decoration: underline; }
+/* === CONNEXION === */
+.auth-card { max-width: 420px; margin: 4rem auto; padding: 2rem; background: #fff; border-radius: 8px; box-shadow: 0 2px 12px #0002; }
+.auth-card h1 { font-size: 1.9rem; }
+.form-group { margin-bottom: 1.2rem; }
+.form-group label { display: block; margin-bottom: .4rem; }
+.site-footer { padding: 1.5rem; text-align: center; }
+@media (max-width: 600px) {
+    .auth-card { margin: 1rem auto; padding: 1.25rem; }
+    .nav-links { width: 100%; gap: .75rem; }
+}
