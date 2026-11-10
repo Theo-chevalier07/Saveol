@@ -1,0 +1,354 @@
+<?php
+
+/* ===== CONNEXION ===== */
+
+function verifier_identification($email, $mdp) {
+    require "connexion.php";
+    $sql = "select id_utilisateur, nom, prenom, role, mdp_a_changer from utilisateur where email = ? and mot_de_passe = ?";
+    $exec = $bdd->prepare($sql);
+    // Le mot de passe est haché en sha256 avant d'être comparé
+    $data = [$email, hash('sha256', $mdp)];
+    $trouver = false;
+    $exec->execute($data);
+    $ligne = $exec->fetch();
+    if ($ligne != false) {
+        $trouver = true;
+        $_SESSION['id'] = $ligne['id_utilisateur'];
+        $_SESSION['role'] = $ligne['role'];
+        $_SESSION['nom'] = $ligne['nom'];
+        $_SESSION['prenom'] = $ligne['prenom'];
+        $_SESSION['mdp_a_changer'] = $ligne['mdp_a_changer'];
+    }
+    return $trouver;
+}
+
+function produitsEnAvant(){
+    require "connexion.php";
+    $sql = "select p.*, c.libelle from produit p join categorie c on c.id_categorie = p.id_categorie where p.mis_en_avant = 1 order by p.nom";
+    $exec = $bdd->prepare($sql);
+    $exec->execute();
+    return $exec->fetchAll();
+}
+
+/* ===== PRODUITS ===== */
+
+function getProduit($id) {
+    require "connexion.php";
+    $sql = "select p.*, c.libelle from produit p join categorie c on c.id_categorie = p.id_categorie where p.id_produit = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$id]);
+    return $exec->fetch();
+}
+
+function getTousLesProduits() {
+    require "connexion.php";
+    $sql = "select p.*, c.libelle from produit p join categorie c on c.id_categorie = p.id_categorie order by c.libelle, p.nom";
+    $exec = $bdd->prepare($sql);
+    $exec->execute();
+    return $exec->fetchAll();
+}
+
+/* ===== PANIER ET COMMANDE ===== */
+
+function getLignesPanier($panier) {
+    // On retrouve chaque produit du panier avec sa quantité et son sous-total
+    $lesLignes = array();
+    foreach ($panier as $idProduit => $quantite) {
+        $produit = getProduit($idProduit);
+        if ($produit != false) {
+            $produit['quantite'] = $quantite;
+            $produit['sous_total'] = $produit['prix'] * $quantite;
+            $lesLignes[] = $produit;
+        }
+    }
+    return $lesLignes;
+}
+
+function getTotalPanier($lesLignes) {
+    $total = 0;
+    foreach ($lesLignes as $ligne) {
+        $total = $total + $ligne['sous_total'];
+    }
+    return $total;
+}
+
+function creerCommande($idUtilisateur, $panier) {
+    require "connexion.php";
+    // Soit tout est enregistré, soit rien en cas d'erreur
+    $bdd->beginTransaction();
+    try {
+        $sql = "insert into commande (statut, id_utilisateur) values ('En attente', ?)";
+        $exec = $bdd->prepare($sql);
+        $exec->execute([$idUtilisateur]);
+        $idCommande = $bdd->lastInsertId();
+
+        $sql = "insert into ligne_commande (id_commande, id_produit, quantite, prix_unitaire) values (?, ?, ?, ?)";
+        $exec = $bdd->prepare($sql);
+        foreach ($panier as $idProduit => $quantite) {
+            // On garde le prix du jour dans la ligne
+            $produit = getProduit($idProduit);
+            $exec->execute([$idCommande, $idProduit, $quantite, $produit['prix']]);
+        }
+        $bdd->commit();
+    }
+    catch (Exception $e) {
+        $bdd->rollBack();
+        $idCommande = 0;
+    }
+    return $idCommande;
+}
+
+/* ===== MOT DE PASSE ===== */
+
+function verifierMotDePasse($id, $mdp) {
+    require "connexion.php";
+    $sql = "select count(*) from utilisateur where id_utilisateur = ? and mot_de_passe = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$id, hash('sha256', $mdp)]);
+    return $exec->fetchColumn() > 0;
+}
+
+function modifierMotDePasse($id, $mdp) {
+    require "connexion.php";
+    // Le mot de passe provisoire est remplacé, on n'oblige plus à le changer
+    $sql = "update utilisateur set mot_de_passe = ?, mdp_a_changer = 0 where id_utilisateur = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([hash('sha256', $mdp), $id]);
+}
+
+/* ===== MON COMPTE ===== */
+
+function getUtilisateur($id) {
+    require "connexion.php";
+    $sql = "select * from utilisateur where id_utilisateur = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$id]);
+    return $exec->fetch();
+}
+
+function emailDejaUtilise($email, $id) {
+    require "connexion.php";
+    $sql = "select count(*) from utilisateur where email = ? and id_utilisateur != ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$email, $id]);
+    return $exec->fetchColumn() > 0;
+}
+
+function modifierUtilisateur($id, $nom, $prenom, $email, $telephone, $adresse) {
+    require "connexion.php";
+    $sql = "update utilisateur set nom = ?, prenom = ?, email = ?, telephone = ?, adresse = ? where id_utilisateur = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$nom, $prenom, $email, $telephone, $adresse, $id]);
+}
+
+function getCommandesClient($idUtilisateur) {
+    require "connexion.php";
+    $sql = "select c.id_commande, c.date_commande, c.statut, sum(l.quantite * l.prix_unitaire) as montant
+            from commande c join ligne_commande l on l.id_commande = c.id_commande
+            where c.id_utilisateur = ?
+            group by c.id_commande
+            order by c.date_commande desc";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$idUtilisateur]);
+    return $exec->fetchAll();
+}
+
+/* ===== COMMANDES ===== */
+
+function getCommande($idCommande) {
+    require "connexion.php";
+    $sql = "select c.*, u.nom, u.prenom, u.email, u.telephone, u.adresse, sum(l.quantite * l.prix_unitaire) as montant
+            from commande c
+            join utilisateur u on u.id_utilisateur = c.id_utilisateur
+            join ligne_commande l on l.id_commande = c.id_commande
+            where c.id_commande = ?
+            group by c.id_commande";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$idCommande]);
+    return $exec->fetch();
+}
+
+function getLignesCommande($idCommande) {
+    require "connexion.php";
+    $sql = "select p.nom, p.image, p.conditionnement, l.quantite, l.prix_unitaire, l.quantite * l.prix_unitaire as sous_total
+            from ligne_commande l join produit p on p.id_produit = l.id_produit
+            where l.id_commande = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$idCommande]);
+    return $exec->fetchAll();
+}
+
+function getToutesLesCommandes($statut) {
+    require "connexion.php";
+    $sql = "select c.id_commande, c.date_commande, c.statut, u.nom, u.prenom, sum(l.quantite * l.prix_unitaire) as montant
+            from commande c
+            join utilisateur u on u.id_utilisateur = c.id_utilisateur
+            join ligne_commande l on l.id_commande = c.id_commande";
+    $data = [];
+    // Filtre par statut si on en a choisi un
+    if ($statut != '') {
+        $sql = $sql . " where c.statut = ?";
+        $data = [$statut];
+    }
+    $sql = $sql . " group by c.id_commande order by c.date_commande desc";
+    $exec = $bdd->prepare($sql);
+    $exec->execute($data);
+    return $exec->fetchAll();
+}
+
+function getStatutsSuivants($statut) {
+    $suivants = array(
+        'En attente' => array('Validée', 'Refusée'),
+        'Validée' => array('Expédiée', 'Refusée'),
+        'Expédiée' => array('Terminée'),
+        'Terminée' => array(),
+        'Refusée' => array()
+    );
+    return $suivants[$statut];
+}
+
+function modifierStatutCommande($idCommande, $statut) {
+    require "connexion.php";
+    $sql = "update commande set statut = ? where id_commande = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$statut, $idCommande]);
+}
+
+/* ===== GESTION DU CATALOGUE ===== */
+
+function ajouterProduit($nom, $description, $prix, $conditionnement, $image, $misEnAvant, $idCategorie) {
+    require "connexion.php";
+    $sql = "insert into produit (nom, description, prix, conditionnement, image, mis_en_avant, id_categorie) values (?, ?, ?, ?, ?, ?, ?)";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$nom, $description, $prix, $conditionnement, $image, $misEnAvant, $idCategorie]);
+}
+
+function modifierProduit($id, $nom, $description, $prix, $conditionnement, $image, $misEnAvant, $idCategorie) {
+    require "connexion.php";
+    $sql = "update produit set nom = ?, description = ?, prix = ?, conditionnement = ?, image = ?, mis_en_avant = ?, id_categorie = ? where id_produit = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$nom, $description, $prix, $conditionnement, $image, $misEnAvant, $idCategorie, $id]);
+}
+
+function produitDansUneCommande($id) {
+    require "connexion.php";
+    $sql = "select count(*) from ligne_commande where id_produit = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$id]);
+    return $exec->fetchColumn() > 0;
+}
+
+function supprimerProduit($id) {
+    require "connexion.php";
+    $sql = "delete from produit where id_produit = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$id]);
+}
+
+function changerMiseEnAvant($id) {
+    require "connexion.php";
+    // On inverse la valeur : 0 devient 1 et 1 devient 0
+    $sql = "update produit set mis_en_avant = 1 - mis_en_avant where id_produit = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$id]);
+}
+
+function changerDisponibilite($id) {
+    require "connexion.php";
+    $sql = "update produit set disponible = 1 - disponible where id_produit = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$id]);
+}
+
+/* ===== CATEGORIES ===== */
+
+function getCategories() {
+    require "connexion.php";
+    $sql = "select c.id_categorie, c.libelle, count(p.id_produit) as nb_produits
+            from categorie c left join produit p on p.id_categorie = c.id_categorie
+            group by c.id_categorie
+            order by c.libelle";
+    $exec = $bdd->prepare($sql);
+    $exec->execute();
+    return $exec->fetchAll();
+}
+
+function getCategorie($id) {
+    require "connexion.php";
+    $sql = "select * from categorie where id_categorie = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$id]);
+    return $exec->fetch();
+}
+
+function ajouterCategorie($libelle) {
+    require "connexion.php";
+    $sql = "insert into categorie (libelle) values (?)";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$libelle]);
+}
+
+function modifierCategorie($id, $libelle) {
+    require "connexion.php";
+    $sql = "update categorie set libelle = ? where id_categorie = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$libelle, $id]);
+}
+
+function supprimerCategorie($id) {
+    require "connexion.php";
+    $sql = "delete from categorie where id_categorie = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$id]);
+}
+
+function getProduitsParCategorie($idCategorie) {
+    require "connexion.php";
+    $sql = "select p.*, c.libelle from produit p join categorie c on c.id_categorie = p.id_categorie where p.id_categorie = ? order by p.nom";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$idCategorie]);
+    return $exec->fetchAll();
+}
+
+/* ===== GESTION DES COMPTES ===== */
+
+function getTousLesUtilisateurs() {
+    require "connexion.php";
+    $sql = "select u.*, count(c.id_commande) as nb_commandes
+            from utilisateur u left join commande c on c.id_utilisateur = u.id_utilisateur
+            group by u.id_utilisateur
+            order by u.role, u.nom";
+    $exec = $bdd->prepare($sql);
+    $exec->execute();
+    return $exec->fetchAll();
+}
+
+function creerCompte($nom, $prenom, $email, $telephone, $adresse, $role, $mdp) {
+    require "connexion.php";
+    // Le compte reçoit un mot de passe provisoire, à changer à la première connexion
+    $sql = "insert into utilisateur (nom, prenom, email, telephone, adresse, mot_de_passe, mdp_a_changer, role) values (?, ?, ?, ?, ?, ?, 1, ?)";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$nom, $prenom, $email, $telephone, $adresse, hash('sha256', $mdp), $role]);
+}
+
+function modifierRole($id, $role) {
+    require "connexion.php";
+    $sql = "update utilisateur set role = ? where id_utilisateur = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$role, $id]);
+}
+
+function reinitialiserMotDePasse($id, $mdp) {
+    require "connexion.php";
+    $sql = "update utilisateur set mot_de_passe = ?, mdp_a_changer = 1 where id_utilisateur = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([hash('sha256', $mdp), $id]);
+}
+
+function supprimerUtilisateur($id) {
+    require "connexion.php";
+    $sql = "delete from utilisateur where id_utilisateur = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$id]);
+}
+?>
