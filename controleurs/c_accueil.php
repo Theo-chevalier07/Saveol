@@ -1,4 +1,8 @@
 <?php
+if (!defined('SAVEOL')) {
+    exit;
+}
+
 if (!isset($_REQUEST['action'])){
     $action = 'afficher';
 }
@@ -8,7 +12,7 @@ else {
 
 switch($action) {
     case "afficher": {
-        $produitsEnAvant = produitsEnAvant();
+        $lesProduitsEnAvant = produitsEnAvant();
         require "vues/v_accueil.php";
         break;
     }

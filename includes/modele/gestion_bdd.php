@@ -272,4 +272,12 @@ function supprimerCategorie($id) {
     $exec = $bdd->prepare($sql);
     $exec->execute([$id]);
 }
+
+function getProduitsParCategorie($idCategorie) {
+    require "connexion.php";
+    $sql = "select p.*, c.libelle from produit p join categorie c on c.id_categorie = p.id_categorie where p.id_categorie = ? order by p.nom";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$idCategorie]);
+    return $exec->fetchAll();
+}
 ?>

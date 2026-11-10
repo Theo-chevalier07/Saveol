@@ -41,8 +41,9 @@ if (isset($_SESSION['role'])) {
 // Routage des actions
 switch($uc) {
     case 'auth': { include "controleurs/c_auth.php"; break;}
-    case 'inscription': { include "controleurs/c_inscription.php"; break;} // <--- C'ÉTAIT MANQUANT ICI
+    case 'inscription': { include "controleurs/c_inscription.php"; break;}
     case 'deco': { include "controleurs/c_deconnexion.php"; break;}
+    case 'catalogue': { include "controleurs/c_catalogue.php"; break;}
     case 'accueil': { include "controleurs/c_accueil.php"; break;}
     case 'panier': { include "controleurs/c_panier.php"; break;}
     case 'compte': { include "controleurs/c_compte.php"; break;}
