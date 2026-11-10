@@ -1,15 +1,23 @@
 <?php require "includes/header.php"; ?>
 
-<?php if ($produit['id_produit'] == '') { ?>
-    <h1 class="mb-4">Ajouter un produit</h1>
-<?php } else { ?>
-    <h1 class="mb-4">Modifier un produit</h1>
-<?php } ?>
+<a href="index.php?uc=gestion_catalogue" class="btn btn-outline-secondary btn-sm mb-3">Retour au catalogue</a>
+
+<div class="entete-page">
+    <?php if ($produit['id_produit'] == '') { ?>
+        <h1>Ajouter un produit</h1>
+    <?php } else { ?>
+        <h1>Modifier un produit</h1>
+    <?php } ?>
+    <p>Sans prix, le produit est affiché « Sur devis ».</p>
+</div>
 
 <?php if (isset($erreur) && $erreur != '') { ?>
     <div class="alert alert-danger"><?php echo $erreur; ?></div>
 <?php } ?>
 
+<!-- Formulaire du produit -->
+<div class="card">
+<div class="card-body">
 <form method="post" action="index.php?uc=gestion_catalogue&action=enregistrer" enctype="multipart/form-data" class="row g-3">
     <input type="hidden" name="id_produit" value="<?php echo $produit['id_produit']; ?>">
 
@@ -59,5 +67,7 @@
         <a href="index.php?uc=gestion_catalogue" class="btn btn-outline-secondary">Annuler</a>
     </div>
 </form>
+</div>
+</div>
 
 <?php require "includes/footer.php"; ?>

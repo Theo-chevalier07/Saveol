@@ -10,37 +10,61 @@
 <body>
 
 <?php if (isset($_SESSION['id'])) { ?>
-<nav class="navbar navbar-expand-lg navbar-dark bg-saveol">
+<?php
+// La page où on est, pour colorer son lien dans le menu
+$page = '';
+if (isset($_REQUEST['uc'])) {
+    $page = $_REQUEST['uc'];
+}
+
+$nomsRoles = array('client' => 'Client', 'gestionnaire' => 'Gestionnaire', 'admin' => 'Administrateur');
+$initiales = strtoupper(substr($_SESSION['prenom'], 0, 1) . substr($_SESSION['nom'], 0, 1));
+?>
+<!-- Menu, différent selon le rôle -->
+<nav class="navbar navbar-expand-lg navbar-light navbar-saveol">
     <div class="container">
-        <a class="navbar-brand" href="index.php?uc=accueil">Savéol</a>
+        <a class="navbar-brand" href="index.php?uc=accueil"><span class="logo-rond">S</span>Savéol</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="menu">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item"><a class="nav-link" href="index.php?uc=accueil">Accueil</a></li>
-                <li class="nav-item"><a class="nav-link" href="index.php?uc=catalogue">Catalogue</a></li>
+            <ul class="navbar-nav me-auto gap-lg-1">
+                <li class="nav-item"><a class="nav-link <?php if ($page == 'accueil') { echo 'actif'; } ?>" href="index.php?uc=accueil">Accueil</a></li>
+                <li class="nav-item"><a class="nav-link <?php if ($page == 'catalogue') { echo 'actif'; } ?>" href="index.php?uc=catalogue">Catalogue</a></li>
 
                 <?php if ($_SESSION['role'] == 'client') { ?>
-                    <li class="nav-item"><a class="nav-link" href="index.php?uc=panier">Panier</a></li>
-                    <li class="nav-item"><a class="nav-link" href="index.php?uc=compte">Mon compte</a></li>
+                    <li class="nav-item"><a class="nav-link <?php if ($page == 'panier') { echo 'actif'; } ?>" href="index.php?uc=panier">Panier</a></li>
+                    <li class="nav-item"><a class="nav-link <?php if ($page == 'compte') { echo 'actif'; } ?>" href="index.php?uc=compte">Mon compte</a></li>
                 <?php } ?>
 
                 <?php if ($_SESSION['role'] == 'gestionnaire' || $_SESSION['role'] == 'admin') { ?>
-                    <li class="nav-item"><a class="nav-link" href="index.php?uc=gestion_commandes">Commandes</a></li>
-                    <li class="nav-item"><a class="nav-link" href="index.php?uc=gestion_catalogue">Gérer le catalogue</a></li>
-                    <li class="nav-item"><a class="nav-link" href="index.php?uc=gestion_categories">Catégories</a></li>
+                    <li class="nav-item"><a class="nav-link <?php if ($page == 'gestion_commandes') { echo 'actif'; } ?>" href="index.php?uc=gestion_commandes">Commandes</a></li>
+                    <li class="nav-item"><a class="nav-link <?php if ($page == 'gestion_catalogue') { echo 'actif'; } ?>" href="index.php?uc=gestion_catalogue">Produits</a></li>
+                    <li class="nav-item"><a class="nav-link <?php if ($page == 'gestion_categories') { echo 'actif'; } ?>" href="index.php?uc=gestion_categories">Catégories</a></li>
                 <?php } ?>
 
                 <?php if ($_SESSION['role'] == 'admin') { ?>
-                    <li class="nav-item"><a class="nav-link" href="index.php?uc=gestion_comptes">Comptes</a></li>
+                    <li class="nav-item"><a class="nav-link <?php if ($page == 'gestion_comptes') { echo 'actif'; } ?>" href="index.php?uc=gestion_comptes">Comptes</a></li>
                 <?php } ?>
             </ul>
-            <span class="navbar-text me-3"><?php echo htmlspecialchars($_SESSION['prenom'].' '.$_SESSION['nom']); ?></span>
-            <a class="btn btn-light btn-sm" href="index.php?uc=deco">Déconnexion</a>
+            <!-- Utilisateur connecté -->
+            <div class="d-flex align-items-center gap-2 py-2 py-lg-0">
+                <div class="utilisateur-connecte">
+                    <span class="initiales"><?php echo htmlspecialchars($initiales); ?></span>
+                    <div>
+                        <?php echo htmlspecialchars($_SESSION['prenom'] . ' ' . $_SESSION['nom']); ?>
+                        <span class="role"><?php echo $nomsRoles[$_SESSION['role']]; ?></span>
+                    </div>
+                </div>
+                <a class="btn btn-outline-secondary btn-sm" href="index.php?uc=deco">Déconnexion</a>
+            </div>
         </div>
     </div>
 </nav>
 <?php } ?>
 
-<main class="container py-4">
+<?php if (isset($pleinEcran)) { ?>
+<main>
+<?php } else { ?>
+<main class="container py-4 py-lg-5">
+<?php } ?>
