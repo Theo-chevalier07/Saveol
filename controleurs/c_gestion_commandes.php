@@ -1,40 +1,51 @@
 <?php
-if (!defined('SAVEOL')) { http_response_code(403); exit; }
-require 'includes/modele/gestion_commandes.php';
-$action = $_GET['action'] ?? 'liste';
-if (!in_array($action, ['liste', 'detail', 'modifier'], true)) {
-    http_response_code(404); exit('Action introuvable.');
+if (!isset($_REQUEST['action'])){
+    $action = 'liste';
 }
-$id = filter_var($_GET['id_commande'] ?? null, FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
-if ($action !== 'liste' && !$id) { http_response_code(404); exit('Commande introuvable.'); }
-if ($action === 'modifier') {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Allow: POST'); http_response_code(405); exit; }
-    if (!jeton_csrf_valide($_POST['csrf'] ?? null)) { http_response_code(403); exit('Formulaire expiré.'); }
+else {
+    $action = $_REQUEST['action'];
 }
-$statut = $_GET['statut'] ?? '';
-$statuts = changements_possibles();
-if (!is_string($statut) || ($statut !== '' && !isset($statuts[$statut]))) {
-    http_response_code(400); exit('Filtre incorrect.');
-}
-try {
-    require 'includes/modele/connexion.php';
-    $exec = $bdd->prepare('SELECT role FROM utilisateur WHERE id_utilisateur = ?');
-    $exec->execute([$_SESSION['id']]);
-    if (!in_array($exec->fetchColumn(), ['admin', 'gestionnaire'], true)) { http_response_code(403); exit('Accès réservé.'); }
-    if ($action === 'modifier') {
-        if (!changer_statut_commande($bdd, $id, $_POST['ancien'] ?? null, $_POST['nouveau'] ?? null)) {
-            http_response_code(409); exit('Changement impossible. Rechargez la commande pour voir son statut.');
+
+$message = '';
+$erreur = '';
+
+switch($action) {
+    case "liste": {
+        if (isset($_REQUEST['statut'])) {
+            $statutChoisi = $_REQUEST['statut'];
         }
-        header('Location: index.php?uc=gestion_commandes&action=detail&id_commande=' . $id, true, 303);
-        exit;
+        else {
+            $statutChoisi = '';
+        }
+        $lesCommandes = getToutesLesCommandes($statutChoisi);
+        require "vues/v_gestion_commandes.php";
+        break;
     }
-    $commandes = commandes_gestion($bdd, $statut, $action === 'detail' ? $id : null);
-    if ($action === 'detail') {
-        if (!$commandes) { http_response_code(404); exit('Commande introuvable.'); }
-        $commande = $commandes[0];
-        $lignes = lignes_gestion($bdd, $id);
+
+    case "statut": {
+        $commande = getCommande($_REQUEST['id_commande']);
+        $nouveauStatut = $_REQUEST['statut'];
+        // On revérifie que le changement est autorisé
+        if ($commande != false && in_array($nouveauStatut, getStatutsSuivants($commande['statut']))) {
+            modifierStatutCommande($commande['id_commande'], $nouveauStatut);
+            $message = "Le statut est passé à « " . $nouveauStatut . " ».";
+        }
+        else {
+            $erreur = "Ce changement de statut n'est pas possible.";
+        }
+        // Pas de break : on réaffiche le détail de la commande
     }
-    require 'vues/v_gestion_commandes.php';
-} catch (PDOException $e) {
-    http_response_code(503); echo 'Les commandes sont momentanément indisponibles.';
+
+    case "detail": {
+        $commande = getCommande($_REQUEST['id_commande']);
+        if ($commande == false) {
+            header("Location: index.php?uc=gestion_commandes");
+            exit;
+        }
+        $lesLignes = getLignesCommande($commande['id_commande']);
+        $lesStatuts = getStatutsSuivants($commande['statut']);
+        require "vues/v_detail_commande.php";
+        break;
+    }
 }
+?>
