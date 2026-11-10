@@ -309,4 +309,46 @@ function getProduitsParCategorie($idCategorie) {
     $exec->execute([$idCategorie]);
     return $exec->fetchAll();
 }
+
+/* ===== GESTION DES COMPTES ===== */
+
+function getTousLesUtilisateurs() {
+    require "connexion.php";
+    $sql = "select u.*, count(c.id_commande) as nb_commandes
+            from utilisateur u left join commande c on c.id_utilisateur = u.id_utilisateur
+            group by u.id_utilisateur
+            order by u.role, u.nom";
+    $exec = $bdd->prepare($sql);
+    $exec->execute();
+    return $exec->fetchAll();
+}
+
+function creerCompte($nom, $prenom, $email, $telephone, $adresse, $role, $mdp) {
+    require "connexion.php";
+    // Le compte reçoit un mot de passe provisoire, à changer à la première connexion
+    $sql = "insert into utilisateur (nom, prenom, email, telephone, adresse, mot_de_passe, mdp_a_changer, role) values (?, ?, ?, ?, ?, ?, 1, ?)";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$nom, $prenom, $email, $telephone, $adresse, hash('sha256', $mdp), $role]);
+}
+
+function modifierRole($id, $role) {
+    require "connexion.php";
+    $sql = "update utilisateur set role = ? where id_utilisateur = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$role, $id]);
+}
+
+function reinitialiserMotDePasse($id, $mdp) {
+    require "connexion.php";
+    $sql = "update utilisateur set mot_de_passe = ?, mdp_a_changer = 1 where id_utilisateur = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([hash('sha256', $mdp), $id]);
+}
+
+function supprimerUtilisateur($id) {
+    require "connexion.php";
+    $sql = "delete from utilisateur where id_utilisateur = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$id]);
+}
 ?>

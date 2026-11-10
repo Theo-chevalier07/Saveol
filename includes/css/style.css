@@ -798,6 +798,11 @@ hr {
     margin-right: auto;
 }
 
+/* === GESTION DES COMPTES === */
+.champ-mdp {
+    max-width: 280px;
+}
+
 /* === FOOTER === */
 .site-footer {
     background-color: var(--couleur-secondaire-fonce);

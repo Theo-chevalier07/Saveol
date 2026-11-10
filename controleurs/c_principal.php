@@ -60,6 +60,7 @@ switch($uc) {
     case 'gestion_commandes': { include "controleurs/c_gestion_commandes.php"; break;}
     case 'gestion_catalogue': { include "controleurs/c_gestion_catalogue.php"; break;}
     case 'gestion_categories': { include "controleurs/c_gestion_categories.php"; break;}
+    case 'gestion_comptes': { include "controleurs/c_gestion_comptes.php"; break;}
     default: { include "vues/v_espace.php"; break;}
 }
 ?>
