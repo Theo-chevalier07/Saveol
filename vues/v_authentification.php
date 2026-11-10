@@ -10,7 +10,7 @@
 		h1 { margin-top: 0; text-align: center; }
 		label { display: block; margin: 1rem 0 .4rem; }
 		input { box-sizing: border-box; width: 100%; padding: .7rem; border: 1px solid #bbb; border-radius: 4px; }
-		button { width: 100%; margin-top: 1.2rem; padding: .75rem; border: 0; border-radius: 4px; background: #2457a7; color: white; font-size: 1rem; cursor: pointer; }
+		button { width: 100%; margin-top: 1.2rem; padding: .75rem; border: 0; border-radius: 4px; background: #03c800; color: white; font-size: 1rem; cursor: pointer; }
 		.message { color: #b42318; }
 	</style>
 </head>
@@ -26,6 +26,7 @@
 
 			<button type="submit">Se connecter</button>
 		</form>
+        <button href="index.php?uc=inscription&action=afficher">S'inscrire</button>
 	</main>
 </body>
 </html>
