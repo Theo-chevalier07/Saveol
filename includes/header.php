@@ -47,16 +47,21 @@ $initiales = strtoupper(substr($_SESSION['prenom'], 0, 1) . substr($_SESSION['no
                     <li class="nav-item"><a class="nav-link <?php if ($page == 'gestion_comptes') { echo 'actif'; } ?>" href="index.php?uc=gestion_comptes">Comptes</a></li>
                 <?php } ?>
             </ul>
-            <!-- Utilisateur connecté -->
-            <div class="d-flex align-items-center gap-2 py-2 py-lg-0">
-                <div class="utilisateur-connecte">
+            <!-- Utilisateur connecté, avec son menu déroulant -->
+            <div class="dropdown py-2 py-lg-0">
+                <button class="utilisateur-connecte dropdown-toggle" type="button" data-bs-toggle="dropdown">
                     <span class="initiales"><?php echo htmlspecialchars($initiales); ?></span>
-                    <div>
+                    <span class="text-start">
                         <?php echo htmlspecialchars($_SESSION['prenom'] . ' ' . $_SESSION['nom']); ?>
                         <span class="role"><?php echo $nomsRoles[$_SESSION['role']]; ?></span>
-                    </div>
-                </div>
-                <a class="btn btn-outline-secondary btn-sm" href="index.php?uc=deco">Déconnexion</a>
+                    </span>
+                    <span class="fleche">&lsaquo;</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="index.php?uc=mot_de_passe">Changer mon mot de passe</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item deconnexion" href="index.php?uc=deco">Déconnexion</a></li>
+                </ul>
             </div>
         </div>
     </div>

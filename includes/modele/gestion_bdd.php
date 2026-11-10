@@ -4,7 +4,7 @@
 
 function verifier_identification($email, $mdp) {
     require "connexion.php";
-    $sql = "select id_utilisateur, nom, prenom, role from utilisateur where email = ? and mot_de_passe = ?";
+    $sql = "select id_utilisateur, nom, prenom, role, mdp_a_changer from utilisateur where email = ? and mot_de_passe = ?";
     $exec = $bdd->prepare($sql);
     // Le mot de passe est haché en sha256 avant d'être comparé
     $data = [$email, hash('sha256', $mdp)];
@@ -17,6 +17,7 @@ function verifier_identification($email, $mdp) {
         $_SESSION['role'] = $ligne['role'];
         $_SESSION['nom'] = $ligne['nom'];
         $_SESSION['prenom'] = $ligne['prenom'];
+        $_SESSION['mdp_a_changer'] = $ligne['mdp_a_changer'];
     }
     return $trouver;
 }
@@ -73,6 +74,24 @@ function creerCommande($idUtilisateur, $panier) {
         $idCommande = 0;
     }
     return $idCommande;
+}
+
+/* ===== MOT DE PASSE ===== */
+
+function verifierMotDePasse($id, $mdp) {
+    require "connexion.php";
+    $sql = "select count(*) from utilisateur where id_utilisateur = ? and mot_de_passe = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([$id, hash('sha256', $mdp)]);
+    return $exec->fetchColumn() > 0;
+}
+
+function modifierMotDePasse($id, $mdp) {
+    require "connexion.php";
+    // Le mot de passe provisoire est remplacé, on n'oblige plus à le changer
+    $sql = "update utilisateur set mot_de_passe = ?, mdp_a_changer = 0 where id_utilisateur = ?";
+    $exec = $bdd->prepare($sql);
+    $exec->execute([hash('sha256', $mdp), $id]);
 }
 
 /* ===== MON COMPTE ===== */

@@ -12,11 +12,13 @@ Site externe pour les clients (GMS et grossistes) en PHP MVC avec une base MySQL
 
 ## Comptes de test
 
-| Rôle | Email | Mot de passe |
+| Rôle | Email | Mot de passe provisoire |
 |---|---|---|
 | Client | client@primeurs-elorn.fr | Client123! |
 | Gestionnaire | gestion@saveol.fr | Gestion123! |
 | Administrateur | admin@saveol.fr | Admin123! |
+
+Ce sont des mots de passe provisoires : à la première connexion, le site oblige à choisir un nouveau mot de passe.
 
 ## Organisation du code
 

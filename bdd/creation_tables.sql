@@ -13,6 +13,7 @@ CREATE TABLE utilisateur (
     telephone VARCHAR(20),
     adresse VARCHAR(255),
     mot_de_passe VARCHAR(255) NOT NULL,
+    mdp_a_changer BOOLEAN NOT NULL DEFAULT 1,
     role VARCHAR(20) NOT NULL DEFAULT 'client',
     date_creation DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id_utilisateur)

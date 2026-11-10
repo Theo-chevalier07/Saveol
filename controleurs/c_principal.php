@@ -11,6 +11,11 @@ if (!isset($_SESSION['id']) && $uc != 'auth' && $uc != 'inscription') {
     $uc = 'auth';
 }
 
+// Première connexion : il faut d'abord changer le mot de passe provisoire
+if (isset($_SESSION['id']) && $_SESSION['mdp_a_changer'] == 1 && $uc != 'mot_de_passe' && $uc != 'deco') {
+    $uc = 'mot_de_passe';
+}
+
 // Pages réservées à certains rôles
 $pagesClient = array('panier', 'compte');
 $pagesGestionnaire = array('gestion_commandes', 'gestion_catalogue', 'gestion_categories');
@@ -31,6 +36,7 @@ switch($uc) {
     case 'accueil': { include "controleurs/c_accueil.php"; break;}
     case 'panier': { include "controleurs/c_panier.php"; break;}
     case 'compte': { include "controleurs/c_compte.php"; break;}
+    case 'mot_de_passe': { include "controleurs/c_mot_de_passe.php"; break;}
     case 'gestion_commandes': { include "controleurs/c_gestion_commandes.php"; break;}
     case 'gestion_catalogue': { include "controleurs/c_gestion_catalogue.php"; break;}
     case 'gestion_categories': { include "controleurs/c_gestion_categories.php"; break;}
