@@ -1,8 +1,14 @@
 <?php
+// Définition de la constante de sécurité indispensable pour le projet Saveol
+define('SAVEOL', true);
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 if (!isset($_REQUEST['uc'])) {
     $uc = 'auth';
-    }
-else {
+} else {
     $uc = $_REQUEST['uc'];
 }
 
@@ -12,26 +18,30 @@ if (!isset($_SESSION['id']) && $uc != 'auth' && $uc != 'inscription') {
 }
 
 // Première connexion : il faut d'abord changer le mot de passe provisoire
-if (isset($_SESSION['id']) && $_SESSION['mdp_a_changer'] == 1 && $uc != 'mot_de_passe' && $uc != 'deco') {
+if (isset($_SESSION['id']) && isset($_SESSION['mdp_a_changer']) && $_SESSION['mdp_a_changer'] == 1 && $uc != 'mot_de_passe' && $uc != 'deco') {
     $uc = 'mot_de_passe';
 }
 
-// Pages réservées à certains rôles
-$pagesClient = array('panier', 'compte');
-$pagesGestionnaire = array('gestion_commandes', 'gestion_catalogue', 'gestion_categories');
+// Pages réservées à certains rôles (uniquement si l'utilisateur est connecté)
+if (isset($_SESSION['role'])) {
+    $pagesClient = array('panier', 'compte');
+    $pagesGestionnaire = array('gestion_commandes', 'gestion_catalogue', 'gestion_categories');
 
-if (in_array($uc, $pagesClient) && $_SESSION['role'] != 'client') {
-    $uc = 'accueil';
-}
-if (in_array($uc, $pagesGestionnaire) && $_SESSION['role'] != 'gestionnaire' && $_SESSION['role'] != 'admin') {
-    $uc = 'accueil';
-}
-if ($uc == 'gestion_comptes' && $_SESSION['role'] != 'admin') {
-    $uc = 'accueil';
+    if (in_array($uc, $pagesClient) && $_SESSION['role'] != 'client') {
+        $uc = 'accueil';
+    }
+    if (in_array($uc, $pagesGestionnaire) && $_SESSION['role'] != 'gestionnaire' && $_SESSION['role'] != 'admin') {
+        $uc = 'accueil';
+    }
+    if ($uc == 'gestion_comptes' && $_SESSION['role'] != 'admin') {
+        $uc = 'accueil';
+    }
 }
 
+// Routage des actions
 switch($uc) {
     case 'auth': { include "controleurs/c_auth.php"; break;}
+    case 'inscription': { include "controleurs/c_inscription.php"; break;} // <--- C'ÉTAIT MANQUANT ICI
     case 'deco': { include "controleurs/c_deconnexion.php"; break;}
     case 'accueil': { include "controleurs/c_accueil.php"; break;}
     case 'panier': { include "controleurs/c_panier.php"; break;}
