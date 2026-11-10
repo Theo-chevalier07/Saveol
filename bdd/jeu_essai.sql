@@ -2,7 +2,8 @@ SET NAMES utf8mb4;
 USE saveol;
 
 -- Utilisateurs : 1 admin, 1 gestionnaire, 3 clients
--- Mots de passe : Admin123! / Gestion123! / Client123!
+-- Mots de passe provisoires : Admin123! / Gestion123! / Client123!
+-- Chaque compte devra changer son mot de passe à la première connexion (mdp_a_changer = 1 par défaut)
 INSERT INTO utilisateur (nom, prenom, email, telephone, adresse, mot_de_passe, role, date_creation) VALUES
 ('Netralli', 'Marc', 'admin@saveol.fr', '0298401010', '1 rue de la Presqu''île, 29470 Plougastel-Daoulas', '3eb3fe66b31e3b4d10fa70b5cad49c7112294af6ae4e476a1c405155d45aa121', 'admin', '2026-09-01 08:00:00'),
 ('Farez', 'Julie', 'gestion@saveol.fr', '0298401020', '1 rue de la Presqu''île, 29470 Plougastel-Daoulas', '14cb1392e34869c5ad54c212f8d4db51c78a851675e5f4cded2c550a5fc92792', 'gestionnaire', '2026-09-01 08:30:00'),

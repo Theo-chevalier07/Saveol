@@ -176,6 +176,65 @@ a {
     line-height: 1.2;
 }
 
+/* Bouton du compte : on enlève le style de base du bouton */
+.utilisateur-connecte.dropdown-toggle {
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 10px;
+    color: var(--couleur-texte);
+}
+
+.utilisateur-connecte.dropdown-toggle:hover {
+    background-color: var(--couleur-fond);
+}
+
+/* On cache la flèche de Bootstrap pour mettre la nôtre */
+.utilisateur-connecte.dropdown-toggle::after {
+    display: none;
+}
+
+.fleche {
+    display: inline-block;
+    font-size: 1.6rem;
+    line-height: 1;
+    color: var(--couleur-gris);
+    transition: transform 0.2s;
+}
+
+/* Quand le menu est ouvert, la flèche < tourne vers le bas */
+.dropdown-toggle.show .fleche {
+    transform: rotate(-90deg);
+}
+
+.dropdown-menu {
+    border: 1px solid var(--couleur-bordure);
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    padding: 6px;
+    margin-top: 8px;
+}
+
+.dropdown-item {
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-weight: 600;
+}
+
+.dropdown-item:hover {
+    background-color: var(--couleur-fond);
+    color: var(--couleur-texte);
+}
+
+.dropdown-item.deconnexion {
+    color: var(--couleur-principale);
+}
+
+.dropdown-divider {
+    border-top: 1px solid var(--couleur-bordure);
+    opacity: 1;
+}
+
 .initiales {
     width: 34px;
     height: 34px;
@@ -289,6 +348,11 @@ hr {
 .alert-success {
     background-color: var(--couleur-secondaire-clair);
     color: var(--couleur-secondaire-fonce);
+}
+
+.alert-warning {
+    background-color: #FFF3D6;
+    color: #7A5200;
 }
 
 .alert-danger {
@@ -495,6 +559,17 @@ hr {
 
 .etoile.active {
     color: #F2A900;
+}
+
+/* === MOT DE PASSE === */
+.carte-petite {
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.page-centree {
+    text-align: center;
 }
 
 /* === FOOTER === */

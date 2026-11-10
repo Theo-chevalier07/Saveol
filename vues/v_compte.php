@@ -48,6 +48,7 @@
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Enregistrer</button>
                 </form>
+                <a href="index.php?uc=mot_de_passe" class="btn btn-outline-secondary w-100 mt-2">Changer mon mot de passe</a>
             </div>
         </div>
     </div>

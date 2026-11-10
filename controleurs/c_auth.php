@@ -24,7 +24,10 @@ switch($action) {
         }
         else {
             // Chaque rôle arrive sur son espace
-            if ($_SESSION['role'] == 'admin') {
+            if ($_SESSION['mdp_a_changer'] == 1) {
+                header("Location: index.php?uc=mot_de_passe");
+            }
+            elseif ($_SESSION['role'] == 'admin') {
                 header("Location: index.php?uc=gestion_comptes");
             }
             elseif ($_SESSION['role'] == 'gestionnaire') {
